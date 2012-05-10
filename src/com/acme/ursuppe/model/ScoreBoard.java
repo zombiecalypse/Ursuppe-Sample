@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.acme.ursuppe.types.IPlayer;
-import static com.acme.ursuppe.helpers.ListHelpers.*;
+import static com.acme.ursuppe.helpers.CollectionHelpers.*;
 
 public class ScoreBoard {
 	private static final Integer WINNING_SCORE = 36;

@@ -22,7 +22,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 
-import static com.acme.ursuppe.helpers.ListHelpers.*;
+import static com.acme.ursuppe.helpers.CollectionHelpers.*;
 
 @RunWith(JExample.class)
 public class ScoreBoardTest {

@@ -9,7 +9,7 @@ public class Phase1 implements IPhase {
 	@Override
 	public void runPhase(Game game) {
 		for (IPlayer player : game.ascPlayers()) {
-			player.moveAndFeedAmoebas();
+			player.moveAndFeedAmoebas(game.getDirection());
 		}
 	}
 }

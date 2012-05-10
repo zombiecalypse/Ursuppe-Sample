@@ -3,13 +3,12 @@ package com.acme.ursuppe.model;
 import java.util.List;
 import java.util.Map;
 
+import com.acme.ursuppe.helpers.CollectionHelpers;
 import com.acme.ursuppe.types.Color;
 import com.acme.ursuppe.types.IAmoeba;
 import com.acme.ursuppe.types.IPlayer;
 import com.acme.ursuppe.types.ISquare;
 import com.google.inject.Inject;
-
-import static com.acme.ursuppe.helpers.MapHelpers.*;
 
 public class Amoeba implements IAmoeba {
 
@@ -60,7 +59,7 @@ public class Amoeba implements IAmoeba {
 	}
 
 	private boolean hasEnoughFood(Map<Color, Integer> foodstuff) {
-		List<Integer> otherFoods = getAll(foodstuff, getColor().otherColors());
+		List<Integer> otherFoods = CollectionHelpers.getAll(foodstuff, getColor().otherColors());
 		for (Integer foodCount : otherFoods) {
 			if (foodCount < 1)
 				return false;
@@ -81,6 +80,17 @@ public class Amoeba implements IAmoeba {
 	@Override
 	public boolean dies() {
 		return this.damagePoints >= this.damageThreshold;
+	}
+
+	@Override
+	public ISquare getSquare() {
+		return this.square;
+	}
+
+	@Override
+	public void move(Direction moveDirection) {
+		ISquare newSquare = this.square.getInDirection(moveDirection);
+		moveTo(newSquare);
 	}
 
 }

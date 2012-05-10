@@ -1,5 +1,7 @@
 package com.acme.ursuppe.types;
 
+import com.acme.ursuppe.model.Direction;
+
 public interface IAmoeba {
 
 	public abstract Integer getDamagePoints();
@@ -11,5 +13,9 @@ public interface IAmoeba {
 	public Color getColor();
 
 	public abstract boolean dies();
+
+	public abstract ISquare getSquare();
+
+	public abstract void move(Direction driftDirection);
 
 }

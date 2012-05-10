@@ -3,13 +3,15 @@ package com.acme.ursuppe.types;
 import java.util.Collection;
 import java.util.Map;
 
+import com.acme.ursuppe.model.Direction;
+
 public interface IPlayer {
 
 	Color getColor();
 
 	Color whatToEat(Map<Color, Integer> foodstuff);
 
-	void moveAndFeedAmoebas();
+	void moveAndFeedAmoebas(Direction driftDirection);
 
 	int getMutationPoints();
 

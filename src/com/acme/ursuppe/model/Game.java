@@ -1,11 +1,16 @@
 package com.acme.ursuppe.model;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Observable;
+import java.util.Set;
+import java.util.Stack;
 
 import com.acme.ursuppe.events.TypedObservable;
 import com.acme.ursuppe.events.UrsuppeEvent;
+import com.acme.ursuppe.types.IBoard;
 import com.acme.ursuppe.types.IGeneCard;
 import com.acme.ursuppe.types.IPhase;
 import com.acme.ursuppe.types.IPlayer;
@@ -18,11 +23,17 @@ import com.google.inject.Inject;
 public class Game extends TypedObservable<UrsuppeEvent> {
 	private List<IPhase> phases;
 	private ScoreBoard scoreboard;
+	private Stack<EnvironmentCard> environmentCards;
+	private Set<IGeneCard> availableGenes;
+	private IBoard squares;
 	
 	@Inject
-	public Game(Collection<IPlayer> players, List<IPhase> phases, ScoreBoard scoreboard) {
+	public Game(Collection<IPlayer> players, List<IPhase> phases, ScoreBoard scoreboard, Stack<EnvironmentCard> environmentCards, Set<IGeneCard> genes, IBoard board) {
 		this.phases = phases;
 		this.scoreboard = scoreboard;
+		this.environmentCards = environmentCards;
+		this.availableGenes = genes;
+		this.squares = board;
 		for (IPlayer player : players) {
 			this.scoreboard.add(player);
 		}
@@ -57,29 +68,31 @@ public class Game extends TypedObservable<UrsuppeEvent> {
 	}
 	
 	public int changeEnvironmentCard() {
-		// TODO Auto-generated method stub
-		return 0;
+		environmentCards.pop();
+		return getOzoneScore();
+	}
+	
+	public int getOzoneScore() {
+		return environmentCards.peek().ozoneScore;
+	}
+	
+	public Direction getDirection() {
+		return environmentCards.peek().direction;
 	}
 
 	public void addGenes(Collection<IGeneCard> genes) {
-		// TODO Auto-generated method stub
-		
+		availableGenes.addAll(genes);
 	}
 
 	public Collection<IGeneCard> availableGenes() {
-		// TODO Auto-generated method stub
-		return null;
+		return new HashSet<IGeneCard>(availableGenes);
 	}
 
 	public void removeGenes(Collection<IGeneCard> boughtGenes) {
-		// TODO Auto-generated method stub
-		
+		availableGenes.removeAll(boughtGenes);
 	}
 
 	public void gainScore(IPlayer player, int i) {
-		// TODO Auto-generated method stub
-		
+		scoreboard.addScore(player, i);
 	}
-
-	
 }
