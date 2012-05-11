@@ -29,3 +29,10 @@ Thumbs.db
 Desktrop.ini
 .DS_Store
 .directory
+
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
