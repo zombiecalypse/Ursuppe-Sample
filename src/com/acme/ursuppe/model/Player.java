@@ -1,5 +1,6 @@
 package com.acme.ursuppe.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,12 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.acme.ursuppe.types.AmoebaFactory;
 import com.acme.ursuppe.types.Color;
 import com.acme.ursuppe.types.IAmoeba;
 import com.acme.ursuppe.types.IGeneCard;
 import com.acme.ursuppe.types.IPlayer;
 import com.acme.ursuppe.types.ISquare;
-import static com.acme.ursuppe.helpers.CollectionHelpers.any;
+import static com.acme.ursuppe.helpers.CollectionHelpers.*;
 
 public class Player implements IPlayer {
 	private static Comparator<IGeneCard> utilityOfGene = new Comparator<IGeneCard>() {
@@ -35,16 +37,18 @@ public class Player implements IPlayer {
 	private Color color;
 	private Collection<IGeneCard> genes = new HashSet<IGeneCard>();
 	private int biopoints = 0;
-	private List<IAmoeba> amoebasOnBoard;
-	private Set<IAmoeba> amoebasOffBoard;
+	private List<IAmoeba> amoebasOnBoard = new ArrayList<IAmoeba>();
+	private Set<IAmoeba> amoebasOffBoard = new HashSet<IAmoeba>();
 
 	private int price_for_movement = 1;
 
 
-	public Player(String name, Color color, Set<IAmoeba> amoebas) {
+	public Player(String name, Color color, AmoebaFactory amoebafactory) {
 		this.name = name;
 		this.color = color;
-		this.amoebasOffBoard = amoebas;
+		for (int i = 0; i < 7; i++) {
+			this.amoebasOffBoard.add(amoebafactory.make(this));
+		}
 	}
 
 	@Override
@@ -65,7 +69,9 @@ public class Player implements IPlayer {
 
 	@Override
 	public void moveAndFeedAmoebas(Direction driftDirection) {
+		assert amoebasOnBoard.size() > 0;
 		for (IAmoeba amoeba : amoebasOnBoard) {
+			assert amoeba.getSquare().getBoard().all().contains(amoeba.getSquare());
 			if (willMove(amoeba) || driftDirection == Direction.CHOOSE) {
 				amoeba.move(moveAmoebaTowards(amoeba));
 				biopoints -= price_for_movement ;
@@ -73,6 +79,7 @@ public class Player implements IPlayer {
 			else {
 				amoeba.move(driftDirection);
 			}
+			amoeba.eat();
 		}
 	}
 
@@ -83,7 +90,7 @@ public class Player implements IPlayer {
 	 */
 	private Direction moveAmoebaTowards(IAmoeba amoeba) {
 		Collection<ISquare> available = amoeba.getSquare().getNeighbors();
-		return amoeba.getSquare().getDirectionOf(any(available));
+		return amoeba.getSquare().getDirectionOf(choose(available));
 	}
 
 	/**
@@ -144,31 +151,34 @@ public class Player implements IPlayer {
 
 	@Override
 	public boolean willBuyAmoeba() {
-		return false; // AK stupid AI is stupid
+		return biopoints > 6 && !availableSquaresForPlacing().isEmpty() && !amoebasOffBoard.isEmpty();
 	}
 
 	@Override
-	public void buyAmoeba() {
+	public Collection<IAmoeba> buyAmoeba() {
 		assert biopoints >= AMOEBA_BP_COST : String.format("Can't pay %d for amoeba with only %d biopoints", AMOEBA_BP_COST, biopoints);
-		
+		List<IAmoeba> added = new LinkedList<IAmoeba>();
 		while (willBuyAmoeba()) {
 			biopoints -= AMOEBA_BP_COST;
-			placeAmoeba();
+			added.add(placeAmoeba());
 		}
-		
+		return added;
 	}
 
-	private void placeAmoeba() {
+	@Override
+	public IAmoeba placeAmoeba() {
 		ISquare place = choosePlace(availableSquaresForPlacing());
-		IAmoeba newAmoeba = any(amoebasOffBoard);
+		IAmoeba newAmoeba = takeAmoeba();
 		newAmoeba.moveTo(place);
+		return newAmoeba;
 	}
 
+	
 	/**
 	 * Template method for decision where to place amoeba.
 	 */
-	protected ISquare choosePlace(Set<ISquare> availableSquaresForPlacing) {
-		return any(availableSquaresForPlacing);
+	protected ISquare choosePlace(Collection<ISquare> availableSquaresForPlacing) {
+		return choose(availableSquaresForPlacing);
 	}
 
 	private Set<ISquare> availableSquaresForPlacing() {
@@ -185,6 +195,7 @@ public class Player implements IPlayer {
 			if (amoeba.dies()) {
 				amoebasOffBoard.add(amoeba);
 				amoebasOnBoard.remove(amoeba);
+				amoeba.setBack();
 				// TODO event for death
 			}
 		}
@@ -198,6 +209,31 @@ public class Player implements IPlayer {
 	@Override
 	public int countGeneCards() {
 		return genes.size();
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
+	}
+
+	@Override
+	public Integer searchAmoeba(IAmoeba amoeba) {
+		return this.amoebasOnBoard.indexOf(amoeba);
+	}
+	
+	private IAmoeba takeAmoeba() {
+		IAmoeba newAmoeba = any(amoebasOffBoard);
+		amoebasOffBoard.remove(newAmoeba);
+		amoebasOnBoard.add(newAmoeba);
+		return newAmoeba;
+	}
+
+	@Override
+	public IAmoeba placeInitial(Collection<ISquare> all) {
+		ISquare place = choosePlace(all);
+		IAmoeba newAmoeba = takeAmoeba();
+		newAmoeba.moveTo(place);
+		return newAmoeba;
 	}
 
 }

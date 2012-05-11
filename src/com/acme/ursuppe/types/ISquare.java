@@ -19,4 +19,14 @@ public interface ISquare {
 	Direction getDirectionOf(ISquare neighbors);
 
 	ISquare getInDirection(Direction moveDirection);
+
+	boolean isEnterable();
+
+	Collection<IAmoeba> getAmoebas();
+
+	void enter(IAmoeba amoeba);
+
+	void leave(IAmoeba amoeba);
+
+	IBoard getBoard();
 }

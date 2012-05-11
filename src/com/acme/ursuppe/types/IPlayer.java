@@ -2,7 +2,6 @@ package com.acme.ursuppe.types;
 
 import java.util.Collection;
 import java.util.Map;
-
 import com.acme.ursuppe.model.Direction;
 
 public interface IPlayer {
@@ -27,12 +26,20 @@ public interface IPlayer {
 
 	boolean willBuyAmoeba();
 
-	void buyAmoeba();
+	Collection<IAmoeba> buyAmoeba();
 
 	void killOffAmoebas();
 
 	int countAmoeba();
 
 	int countGeneCards();
+
+	String getName();
+
+	Integer searchAmoeba(IAmoeba amoeba);
+
+	IAmoeba placeAmoeba();
+
+	IAmoeba placeInitial(Collection<ISquare> all);
 
 }

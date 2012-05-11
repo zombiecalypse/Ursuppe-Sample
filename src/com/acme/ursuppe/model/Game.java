@@ -3,17 +3,19 @@ package com.acme.ursuppe.model;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Set;
 import java.util.Stack;
 
+import com.acme.ursuppe.events.EndOfRoundEvent;
+import com.acme.ursuppe.events.InitialPlacement;
 import com.acme.ursuppe.events.TypedObservable;
 import com.acme.ursuppe.events.UrsuppeEvent;
+import com.acme.ursuppe.events.WinnerAnnouncment;
+import com.acme.ursuppe.types.IAmoeba;
 import com.acme.ursuppe.types.IBoard;
 import com.acme.ursuppe.types.IGeneCard;
 import com.acme.ursuppe.types.IPhase;
 import com.acme.ursuppe.types.IPlayer;
+import com.acme.ursuppe.types.ISquare;
 import com.google.inject.Inject;
 
 /**
@@ -21,14 +23,20 @@ import com.google.inject.Inject;
  * Is observable for UIs.
  */
 public class Game extends TypedObservable<UrsuppeEvent> {
-	private List<IPhase> phases;
-	private ScoreBoard scoreboard;
-	private Stack<EnvironmentCard> environmentCards;
-	private Set<IGeneCard> availableGenes;
-	private IBoard squares;
+	private static final int AMOEBAS_AT_START = 2;
+	private final List<IPhase> phases;
+	private final ScoreBoard scoreboard;
+	private final Stack<EnvironmentCard> environmentCards;
+	private final Collection<IGeneCard> availableGenes;
+	private final IBoard squares;
 	
 	@Inject
-	public Game(Collection<IPlayer> players, List<IPhase> phases, ScoreBoard scoreboard, Stack<EnvironmentCard> environmentCards, Set<IGeneCard> genes, IBoard board) {
+	public Game(Collection<IPlayer> players, 
+			List<IPhase> phases, 
+			ScoreBoard scoreboard, 
+			Stack<EnvironmentCard> environmentCards, 
+			Collection<IGeneCard> genes, 
+			IBoard board) {
 		this.phases = phases;
 		this.scoreboard = scoreboard;
 		this.environmentCards = environmentCards;
@@ -43,16 +51,34 @@ public class Game extends TypedObservable<UrsuppeEvent> {
 		for (IPhase phase : phases) {
 			phase.runPhase(this);
 		}
+		this.notifyObservers(new EndOfRoundEvent(this));
+	}
+	
+	public void pushEvent(UrsuppeEvent e) {
+		this.notifyObservers(e);
 	}
 	
 	public void play() {
+		setup();
 		while (!isOver()) {
 			playRound();
 		}
+		this.notifyObservers(new WinnerAnnouncment(this.scoreboard.getBest()));
 	}
 	
+	private void setup() {
+		for (IPlayer player : this.ascPlayers()) {
+			Collection<ISquare> possible = this.squares.all();
+			for (int n = 0; n < AMOEBAS_AT_START; n++) {
+				IAmoeba amoeba = player.placeInitial(possible);
+				possible.remove(amoeba.getSquare());
+				notifyObservers(new InitialPlacement(player, amoeba));
+			}
+		}
+	}
+
 	public boolean isOver() {
-		return this.scoreboard.getWinner() != null;
+		return this.scoreboard.getWinner() != null || this.environmentCards.size() == 1;
 	}
 	
 	public Collection<IPlayer> players() {
@@ -94,5 +120,9 @@ public class Game extends TypedObservable<UrsuppeEvent> {
 
 	public void gainScore(IPlayer player, int i) {
 		scoreboard.addScore(player, i);
+	}
+
+	public IBoard getBoard() {
+		return squares;
 	}
 }

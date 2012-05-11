@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Test;
@@ -26,6 +24,7 @@ import com.google.inject.Injector;
 @RunWith(JExample.class)
 public class AmoebaTest {
 	class AmoebaTestModule extends AbstractModule {
+		@Override
 		protected void configure() {
 			bind(IAmoeba.class).to(Amoeba.class);
 			bind(ISquare.class).toInstance(mock(ISquare.class));

@@ -18,4 +18,8 @@ public interface IAmoeba {
 
 	public abstract void move(Direction driftDirection);
 
+	public abstract Integer getNumber();
+
+	void setBack();
+
 }

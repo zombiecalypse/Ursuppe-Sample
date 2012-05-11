@@ -12,10 +12,17 @@ import com.google.inject.Inject;
 
 public class Amoeba implements IAmoeba {
 
+	@Override
+	public String toString() {
+		return "Amoeba [dp=" + damagePoints + ", square=" + square
+				+ ", player=" + player + ", damageThreshold=" + damageThreshold
+				+ "]";
+	}
+
 	private static final int POOP_AMOUNT = 2;
 	private Integer damagePoints;
 	private ISquare square;
-	private IPlayer player;
+	private final IPlayer player;
 	private Integer damageThreshold;
 
 	@Inject
@@ -33,8 +40,12 @@ public class Amoeba implements IAmoeba {
 
 	@Override
 	public void moveTo(ISquare square) {
-		assert this.square == null || (this.square.getNeighbors().contains(square));
+		assert this.square == null || (this.square.getNeighbors().contains(square)) || this.square.equals(square);
+		if (this.square != null) {
+			this.square.leave(this);
+		}
 		this.square = square;
+		this.square.enter(this);
 	}
 
 	@Override
@@ -68,8 +79,7 @@ public class Amoeba implements IAmoeba {
 			if (foodCount > 1)
 				return true;
 		}
-		assert false;
-		return false; // AK to make Eclipse shut up
+		return false;
 	}
 
 	@Override
@@ -91,6 +101,18 @@ public class Amoeba implements IAmoeba {
 	public void move(Direction moveDirection) {
 		ISquare newSquare = this.square.getInDirection(moveDirection);
 		moveTo(newSquare);
+	}
+
+	@Override
+	public Integer getNumber() {
+		return this.player.searchAmoeba(this);
+	}
+	
+	@Override
+	public void setBack() {
+		this.square.leave(this);
+		this.damagePoints = 0;
+		this.square = null;
 	}
 
 }

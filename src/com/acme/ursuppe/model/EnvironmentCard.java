@@ -1,6 +1,6 @@
 package com.acme.ursuppe.model;
 
-class EnvironmentCard {
+public class EnvironmentCard {
 	public final Direction direction;
 	public final int ozoneScore;
 	

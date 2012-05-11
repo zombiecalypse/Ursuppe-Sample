@@ -2,22 +2,17 @@ package com.acme.ursuppe.tests;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
-
 import java.util.Arrays;
 import java.util.List;
-
-import javax.inject.Provider;
 
 import ch.unibe.jexample.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.acme.ursuppe.model.ScoreBoard;
+import com.acme.ursuppe.modules.TestModule;
 import com.acme.ursuppe.types.IPlayer;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;

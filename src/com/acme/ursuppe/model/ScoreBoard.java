@@ -15,6 +15,7 @@ public class ScoreBoard {
 	private Map<IPlayer, Integer> scores = new HashMap<IPlayer, Integer>();
 	
 	private final Comparator<IPlayer> asc = new Comparator<IPlayer>() {
+		@Override
 		public int compare(IPlayer arg0, IPlayer arg1) {
 			return scores.get(arg0).compareTo(scores.get(arg1));
 		}
@@ -51,8 +52,10 @@ public class ScoreBoard {
 	}
 	public IPlayer getWinner() {
 		if (max() < WINNING_SCORE) return null;
-		
+		return getBest();
+	}
+	
+	public IPlayer getBest() {
 		return Collections.max(scores.keySet(), asc);
 	}
-
 }
