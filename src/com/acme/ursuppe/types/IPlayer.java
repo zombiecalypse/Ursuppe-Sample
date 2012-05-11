@@ -2,7 +2,10 @@ package com.acme.ursuppe.types;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+
 import com.acme.ursuppe.model.Direction;
+import com.acme.ursuppe.model.Game;
 
 public interface IPlayer {
 
@@ -41,5 +44,20 @@ public interface IPlayer {
 	IAmoeba placeAmoeba();
 
 	IAmoeba placeInitial(Collection<ISquare> all);
+
+	void setNumberOfDiceForMovement(int i);
+
+	void setAvailableSquareStrategy(AvailableSquares as);
+
+	AvailableSquares getAvailableSquareStrategy();
+	
+	public abstract class AvailableSquares {
+		public abstract Set<ISquare> get();
+	}
+
+	IBoard getBoard();
+
+	void enter(Game game);
+
 
 }

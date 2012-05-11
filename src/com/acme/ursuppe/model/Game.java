@@ -43,6 +43,7 @@ public class Game extends TypedObservable<UrsuppeEvent> {
 		this.availableGenes = genes;
 		this.squares = board;
 		for (IPlayer player : players) {
+			player.enter(this);
 			this.scoreboard.add(player);
 		}
 	}

@@ -13,9 +13,12 @@ import java.util.Set;
 import com.acme.ursuppe.types.AmoebaFactory;
 import com.acme.ursuppe.types.Color;
 import com.acme.ursuppe.types.IAmoeba;
+import com.acme.ursuppe.types.IBoard;
 import com.acme.ursuppe.types.IGeneCard;
 import com.acme.ursuppe.types.IPlayer;
 import com.acme.ursuppe.types.ISquare;
+import com.acme.ursuppe.types.IPlayer.AvailableSquares;
+
 import static com.acme.ursuppe.helpers.CollectionHelpers.*;
 
 public class Player implements IPlayer {
@@ -39,13 +42,16 @@ public class Player implements IPlayer {
 	private int biopoints = 0;
 	private List<IAmoeba> amoebasOnBoard = new ArrayList<IAmoeba>();
 	private Set<IAmoeba> amoebasOffBoard = new HashSet<IAmoeba>();
+	private Game game;
 
 	private int price_for_movement = 1;
 
+	private int numerOfDiceForMovement = 1;
 
 	public Player(String name, Color color, AmoebaFactory amoebafactory) {
 		this.name = name;
 		this.color = color;
+		this.game = game;
 		for (int i = 0; i < 7; i++) {
 			this.amoebasOffBoard.add(amoebafactory.make(this));
 		}
@@ -58,7 +64,7 @@ public class Player implements IPlayer {
 
 	@Override
 	public Color whatToEat(final Map<Color, Integer> foodstuff) {
-		Comparator<Color> mostFoodstuff  = new Comparator<Color>() {
+		Comparator<Color> mostFoodstuff = new Comparator<Color>() {
 			@Override
 			public int compare(Color o1, Color o2) {
 				return foodstuff.get(o1).compareTo(foodstuff.get(o2));
@@ -71,30 +77,42 @@ public class Player implements IPlayer {
 	public void moveAndFeedAmoebas(Direction driftDirection) {
 		assert amoebasOnBoard.size() > 0;
 		for (IAmoeba amoeba : amoebasOnBoard) {
-			assert amoeba.getSquare().getBoard().all().contains(amoeba.getSquare());
-			if (willMove(amoeba) || driftDirection == Direction.CHOOSE) {
+			assert amoeba.getSquare().getBoard().all()
+					.contains(amoeba.getSquare());
+			if (driftDirection == Direction.CHOOSE) {
 				amoeba.move(moveAmoebaTowards(amoeba));
-				biopoints -= price_for_movement ;
-			}
-			else {
+			} else if (willMove(amoeba)) {
+				biopoints -= price_for_movement;
+				// TODO move maybe
+				
+			} else {
 				amoeba.move(driftDirection);
+
 			}
+
 			amoeba.eat();
 		}
 	}
 
 	/**
 	 * Template method that choses the direction to move for an amoeba
+	 * 
 	 * @param amoeba
 	 * @return
 	 */
 	private Direction moveAmoebaTowards(IAmoeba amoeba) {
+
 		Collection<ISquare> available = amoeba.getSquare().getNeighbors();
 		return amoeba.getSquare().getDirectionOf(choose(available));
 	}
 
+	public interface DirectionChooser {
+
+	}
+
 	/**
 	 * Template method to decide if amoeba should move.
+	 * 
 	 * @param amoeba
 	 * @return
 	 */
@@ -106,8 +124,8 @@ public class Player implements IPlayer {
 	public int getMutationPoints() {
 		return sumMutationPoints(genes);
 	}
-	
-	public int sumMutationPoints(Collection<IGeneCard> genes) {
+
+	private int sumMutationPoints(Collection<IGeneCard> genes) {
 		int sum = 0;
 		for (IGeneCard gene : genes) {
 			sum += gene.mutationPoints();
@@ -139,8 +157,10 @@ public class Player implements IPlayer {
 
 	@Override
 	public void pay(int differenceCost) {
-		assert biopoints >= differenceCost : String.format("Can't pay %d with only %d biopoints", differenceCost, biopoints);
-		
+		assert biopoints >= differenceCost : String.format(
+				"Can't pay %d with only %d biopoints", differenceCost,
+				biopoints);
+
 		biopoints -= differenceCost;
 	}
 
@@ -151,12 +171,15 @@ public class Player implements IPlayer {
 
 	@Override
 	public boolean willBuyAmoeba() {
-		return biopoints > 6 && !availableSquaresForPlacing().isEmpty() && !amoebasOffBoard.isEmpty();
+		return biopoints > 6 && !availableSquaresForPlacing().isEmpty()
+				&& !amoebasOffBoard.isEmpty();
 	}
 
 	@Override
 	public Collection<IAmoeba> buyAmoeba() {
-		assert biopoints >= AMOEBA_BP_COST : String.format("Can't pay %d for amoeba with only %d biopoints", AMOEBA_BP_COST, biopoints);
+		assert biopoints >= AMOEBA_BP_COST : String.format(
+				"Can't pay %d for amoeba with only %d biopoints",
+				AMOEBA_BP_COST, biopoints);
 		List<IAmoeba> added = new LinkedList<IAmoeba>();
 		while (willBuyAmoeba()) {
 			biopoints -= AMOEBA_BP_COST;
@@ -173,7 +196,6 @@ public class Player implements IPlayer {
 		return newAmoeba;
 	}
 
-	
 	/**
 	 * Template method for decision where to place amoeba.
 	 */
@@ -181,12 +203,28 @@ public class Player implements IPlayer {
 		return choose(availableSquaresForPlacing);
 	}
 
-	private Set<ISquare> availableSquaresForPlacing() {
-		Set<ISquare> available = new HashSet<ISquare>();
-		for (IAmoeba amoeba : amoebasOnBoard) {
-			available.addAll(amoeba.getSquare().getNeighbors());
+	private AvailableSquares availableSquareStrategy = new AvailableSquares() {
+		public Set<ISquare> get() {
+			Set<ISquare> available = new HashSet<ISquare>();
+			for (IAmoeba amoeba : amoebasOnBoard) {
+				available.addAll(amoeba.getSquare().getNeighbors());
+			}
+			return available;
 		}
-		return available;
+	};
+
+	@Override
+	public void setAvailableSquareStrategy(AvailableSquares as) {
+		this.availableSquareStrategy = as;
+	}
+
+	@Override
+	public AvailableSquares getAvailableSquareStrategy() {
+		return this.availableSquareStrategy;
+	}
+
+	private Set<ISquare> availableSquaresForPlacing() {
+		return availableSquareStrategy.get();
 	}
 
 	@Override
@@ -220,7 +258,7 @@ public class Player implements IPlayer {
 	public Integer searchAmoeba(IAmoeba amoeba) {
 		return this.amoebasOnBoard.indexOf(amoeba);
 	}
-	
+
 	private IAmoeba takeAmoeba() {
 		IAmoeba newAmoeba = any(amoebasOffBoard);
 		amoebasOffBoard.remove(newAmoeba);
@@ -234,6 +272,22 @@ public class Player implements IPlayer {
 		IAmoeba newAmoeba = takeAmoeba();
 		newAmoeba.moveTo(place);
 		return newAmoeba;
+	}
+
+	@Override
+	public void setNumberOfDiceForMovement(int i) {
+		this.numerOfDiceForMovement = i;
+
+	}
+
+	@Override
+	public void enter(Game game) {
+		this.game = game;
+	}
+
+	@Override
+	public IBoard getBoard() {
+		return game.getBoard();
 	}
 
 }
