@@ -36,3 +36,6 @@ Desktrop.ini
 *.jar
 *.war
 *.ear
+
+html/
+latex/
